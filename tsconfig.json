@@ -9,10 +9,7 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "esnext",
-		"module": "esnext",
-		"moduleResolution": "node",
-		"jsx": "preserve",
+		"moduleResolution": "bundler",
 		"lib": ["esnext", "dom"],
 		"types": ["vite/client", "svelte", "@auth/core", "@auth/sveltekit"]
 	},

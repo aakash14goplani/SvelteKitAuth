@@ -1,10 +1,10 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-	readonly VITE_CLIENT_ID: string;
-	readonly VITE_CLIENT_SECRET: string;
-	readonly VITE_ISSUER: string;
-	readonly VITE_WELL_KNOWN: string;
+	readonly CLIENT_ID: string;
+	readonly CLIENT_SECRET: string;
+	readonly ISSUER: string;
+	readonly WELL_KNOWN: string;
 }
 
 interface ImportMeta {

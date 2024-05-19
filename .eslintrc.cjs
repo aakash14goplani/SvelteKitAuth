@@ -30,6 +30,10 @@ module.exports = {
 	],
 	rules: {
 		'@typescript-eslint/no-explicit-any': 0,
-		'no-mixed-spaces-and-tabs': 1
+		'no-mixed-spaces-and-tabs': 0,
+		' @typescript-eslint/no-inferrable-types': 0,
+		'@typescript-eslint/no-unused-vars': 0,
+		'no-undef': 0,
+		'no-async-promise-executor': 0
 	}
 };

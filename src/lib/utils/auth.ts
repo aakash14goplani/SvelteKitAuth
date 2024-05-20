@@ -1,4 +1,5 @@
 import { dev } from '$app/environment';
+import Auth0Provider from "@auth/core/providers/auth0";
 import { SvelteKitAuth, type SvelteKitAuthConfig } from '@auth/sveltekit';
 import { VERCEL_SECRET, CLIENT_ID, CLIENT_SECRET, ISSUER, WELL_KNOWN } from '$env/static/private';
 
@@ -10,14 +11,34 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 
 	const config: SvelteKitAuthConfig = {
 		providers: [
-			{
+			Auth0Provider({
 				id: 'auth0',
-				name: 'Auth0',
+				name: 'built-in-oauth-provider',
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+				issuer: ISSUER
+			}),
+			{
+				id: 'auth1',
+				name: 'custom-oauth-provider',
 				type: 'oidc',
+				client: {
+					token_endpoint_auth_method: 'client_secret_post'
+				},
 				clientId: CLIENT_ID,
 				clientSecret: CLIENT_SECRET,
 				issuer: ISSUER,
-				wellKnown: WELL_KNOWN
+				wellKnown: WELL_KNOWN,
+				checks: ['pkce'],
+				authorization: {
+					url: `${ISSUER}authorize`, // 'http://localhost:4200/authorize
+					params: {
+						scope: 'openid name email profile',
+						redirect_uri: `${ISSUER}auth/callback/auth1`
+					}
+				},
+				token: `${ISSUER}oauth/token`,
+				userinfo: `${ISSUER}userinfo`
 			}
 		],
 		debug: true,
@@ -98,10 +119,14 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					if (!isEmpty(profile)) {
 						token = { ...token, ...(profile as any) };
 					}
+					
+					// update user data on request
+					const userQuery = event.request.headers.get('query') || event.url.searchParams.get('query');
+					
 					// refresh token post 30 minutes
 					if (
 						token &&
-						isTokenRefreshRequired(token.token_expires_in as string)
+						(isTokenRefreshRequired(token.token_expires_in as string) || userQuery === 'update-token-data')
 					) {
 						const tokenRequest = await event.fetch(
 							event.url.origin + '/api/renew-token',
@@ -115,25 +140,23 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 								...token,
 								...updatedToken
 							};
-						} else {
-							// what if renew-token fail on server side?
 						}
 					}
-					// update user data on request
-					const userQuery =
-						event.request.headers.get('query') ||
-						event.url.searchParams.get('query');
-					if (userQuery === 'UPDATE_USER' || userQuery === 'RENEW_TOKEN') {
+
+					if (userQuery === 'update-user-data') {
 						try {
-							const body = await new Response(event.request.body).json();
-							if (body) {
+							const clonedRequest = event.request.clone();
+							const clonedBody = clonedRequest.body;
+							const response = await new Response(clonedBody);
+							const body = await response.json();
+							if (!isEmpty(body)) {
 								token = {
 									...token,
 									...body
 								};
 							}
 						} catch (ex: any) {
-							console.log('Unable to update user data for url: ', event.url);
+							console.log('Unable to update user data for url', ex?.message);
 						}
 					}
 				} catch (e: any) {
@@ -178,35 +201,6 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 				 *
 				 * Solution: Clear code-challenge and code-verifier cookies and try login again
 				 */
-				try {
-					errorMessage = errorMessage.toString().toLowerCase();
-					if (
-						errorMessage.includes('invalidcheck') ||
-						errorMessage.includes('callbackrouteerror')
-					) {
-						// clear code-challenge and code-verifier cookies
-						const allCookies = await event.cookies.getAll();
-						if (allCookies && allCookies.length > 0) {
-							allCookies.forEach(async (cookie: any) => {
-								if (
-									cookie.name.includes('code_challenge') ||
-									cookie.name.includes('code_verifier')
-								) {
-									await event.cookies.delete(cookie.name, {
-										path: '/',
-										httpOnly: true
-									});
-								}
-							});
-						}
-					}
-				} catch (e: any) {
-					console.log(
-						'Error while handling InvalidCheck in Auth: ',
-						e?.message,
-						e
-					);
-				}
 			}
 		},
 		events: {
@@ -216,7 +210,9 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 			}
 		},
 		pages: {
-			error: '/myschneider/auth/server-auth-error'
+			error: '/auth/server-auth-error',
+			signIn: '/auth/sign-in',
+			signOut: '/auth/sign-out'
 		}
 	};
 

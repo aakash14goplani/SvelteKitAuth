@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { beforeNavigate, goto } from '$app/navigation';
-	import { base } from '$app/paths';
 
-	beforeNavigate(({ to, cancel }) => {
-		if (to?.url) {
-			const targetUrl = to.url;
-			const targetUrlPath = targetUrl.pathname;
-			if (!targetUrlPath.startsWith('/hello')) {
+	beforeNavigate(async ({ to, cancel }) => {
+		if (to?.url && to.url.pathname !== '/') {
+			// check user session on every navigation
+			const request = await fetch(`${window.location.origin}/api/get-session-status`);
+			const response = await request.json();
+			const publicURLs = ['/ssr-login', '/ssr-logout', '/public', '/'];
+			if (response.status !== 200 && !publicURLs.includes(window.location.pathname)) {
+				// user is not-logged in, redirect to sign-in screen
 				cancel();
-				const newUrl = targetUrl.origin + base + targetUrlPath;
-				goto(newUrl);
+				goto(`/`);
 			}
 		}
 

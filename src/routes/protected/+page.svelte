@@ -1,29 +1,11 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-
-	onMount(() => {
-		// client-side guard, for server-side guard, refer hooks.server.ts
-		console.log('User Data:', $page.data.session);
-		if (!$page?.data?.session?.user?.access_token) {
-			goto(base);
-		}
-	});
-</script>
+<svelte:head>
+	<title>Protected Route</title>
+</svelte:head>
 
 <div class="content">
 	<h1>Protected Page</h1>
 
-	<p>
-		This is a <a href="https://kit.svelte.dev" target="_blank">SvelteKit</a> app. You can make your own
-		by typing the following into your command line and following the prompts:
-	</p>
-
-	<pre>pnpm create svelte@latest</pre>
-
-	<p>This is a protected page. Back to <a href={base}>Home Page</a></p>
+	<p>This is a protected page. Back to <a href="/">Home Page</a> or visit a <a href="/public">public route</a></p>
 </div>
 
 <style lang="scss">

@@ -1,4 +1,3 @@
-import { base } from '$app/paths';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -7,7 +6,7 @@ export const load = (async ({ fetch, locals, url: _url }) => {
 	try {
 		const session = await locals.auth();
 		if (!session?.user) {
-			const tokenCall = await fetch(base + '/auth/csrf');
+			const tokenCall = await fetch('/auth/csrf');
 			const csrfTokenResponse = await new Response(tokenCall.body).json();
 			const csrfToken = csrfTokenResponse.csrfToken;
 
@@ -17,9 +16,9 @@ export const load = (async ({ fetch, locals, url: _url }) => {
 			const formData = new URLSearchParams();
 			formData.append('redirect', 'true');
 			formData.append('csrfToken', csrfToken);
-			formData.append('callbackUrl', `${_url.origin + base}/login`);
+			formData.append('callbackUrl', `${_url.origin}/ssr-login`);
 
-			const signInRequest = await fetch(base + '/auth/signin/auth0? ' + params.toString(), {
+			const signInRequest = await fetch('/auth/signin/auth1? ' + params.toString(), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',

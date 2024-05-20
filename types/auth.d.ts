@@ -30,5 +30,5 @@ interface IUser {
 	exp: number;
 	sid: string;
 	jti: string;
-	library: string;
+	fav_num: string;
 }

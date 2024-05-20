@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
 
 	onMount(async () => {
 		// Comment out till line 9-19 and uncomment line 21-28 if you want to log-out user from
@@ -14,9 +13,9 @@
 		}
 		if (!$page.data.session?.user?.access_token) {
 			setTimeout(() => {
-				goto(base);
+				goto("/");
 				sessionStorage.removeItem('reloadApp');
-			}, 5000);
+			}, 2000);
 		}
 
 		/*
@@ -28,6 +27,10 @@
 		*/
 	});
 </script>
+
+<svelte:head>
+	<title>SSR Logout</title>
+</svelte:head>
 
 <div class="content">
 	<h2>Server Side Flow - Logout</h2>

@@ -4,6 +4,6 @@ There are multiple ways in which we can authenticate a user over the web, few of
 
 SvelteKit does not provide out-of-box authentication. We can extend the means that we discussed above and implement authentication in SvelteKit. This guide will focus on implementing authentication in SvelteKit using SvelteKitAuth and OAuth providers. After reading this guide, you'll have a decent understanding of implementing authentication mechanisms in SvelteKit.
 
-**Blog Post**: https://blog.aakashgoplani.in/sveltekit-authentication-using-sveltekitauth-and-oauth-providers-a-comprehensive-guide
+**Blog Post**: https://blog.aakashgoplani.in/series/sveltekitauth-sveltekit
 
 **Live Demo:** https://svelte-kit-auth0-next-auth.vercel.app/

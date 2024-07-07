@@ -34,7 +34,7 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					url: `${ISSUER}authorize`, // 'http://localhost:4200/authorize
 					params: {
 						scope: 'openid name email profile',
-						redirect_uri: `https://sveltekitauth-authjs.vercel.app/auth/callback/auth1`
+						redirect_uri: `${event.url.origin}/auth/callback/auth1`
 					}
 				},
 				token: `${ISSUER}oauth/token`,
@@ -51,15 +51,6 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 		cookies: {
 			callbackUrl: {
 				name: `${useSecureCookies ? '__Secure-' : ''}authjs.callback-url`,
-				options: {
-					httpOnly: true,
-					sameSite: useSecureCookies ? 'none' : 'lax',
-					path: '/',
-					secure: useSecureCookies
-				}
-			},
-			csrfToken: {
-				name: `${useSecureCookies ? '__Host-' : ''}authjs.csrf-token`,
 				options: {
 					httpOnly: true,
 					sameSite: useSecureCookies ? 'none' : 'lax',
@@ -205,7 +196,7 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 		},
 		events: {
 			async signOut(message: any) {
-				console.log(message);
+				console.log('User signed out ~ ', message);
 				// cleanup activity post logout
 			}
 		},

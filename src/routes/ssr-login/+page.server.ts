@@ -6,16 +6,11 @@ export const load = (async ({ fetch, locals, url: _url }) => {
 	try {
 		const session = await locals.auth();
 		if (!session?.user) {
-			const tokenCall = await fetch('/auth/csrf');
-			const csrfTokenResponse = await new Response(tokenCall.body).json();
-			const csrfToken = csrfTokenResponse.csrfToken;
-
 			const params = new URLSearchParams();
 			params.append('scope', 'api openid profile email');
 
 			const formData = new URLSearchParams();
 			formData.append('redirect', 'true');
-			formData.append('csrfToken', csrfToken);
 			formData.append('callbackUrl', `${_url.origin}/ssr-login`);
 
 			const signInRequest = await fetch('/auth/signin/auth1? ' + params.toString(), {

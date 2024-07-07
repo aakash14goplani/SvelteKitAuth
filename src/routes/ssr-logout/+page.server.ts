@@ -4,13 +4,8 @@ export const load = (async ({ fetch, locals }) => {
 	try {
 		const session = await locals.auth();
 		if (session && !!session?.user?.access_token) {
-			const tokenCall = await fetch('/auth/csrf');
-			const csrfTokenResponse = await new Response(tokenCall.body).json();
-			const csrfToken = csrfTokenResponse.csrfToken;
-
 			const formData = new URLSearchParams();
 			formData.append('redirect', 'false');
-			formData.append('csrfToken', csrfToken);
 
 			await fetch('/auth/signout', {
 				method: 'POST',

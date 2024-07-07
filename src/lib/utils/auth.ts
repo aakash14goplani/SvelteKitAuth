@@ -34,7 +34,7 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					url: `${ISSUER}authorize`, // 'http://localhost:4200/authorize
 					params: {
 						scope: 'openid name email profile',
-						redirect_uri: `${ISSUER}auth/callback/auth1`
+						redirect_uri: `https://sveltekitauth-authjs.vercel.app/auth/callback/auth1`
 					}
 				},
 				token: `${ISSUER}oauth/token`,

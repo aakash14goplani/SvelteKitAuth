@@ -6,4 +6,4 @@ SvelteKit does not provide out-of-box authentication. We can extend the means th
 
 **Blog Post**: https://blog.aakashgoplani.in/series/sveltekitauth-sveltekit
 
-**Live Demo:** https://svelte-kit-auth0-next-auth.vercel.app/
+**Live Demo:** https://sveltekitauth-authjs.vercel.app/

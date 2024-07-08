@@ -196,8 +196,8 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 		},
 		events: {
 			async signOut(message: any) {
-				console.log('User signed out ~ ', message);
-				// cleanup activity post logout
+				console.log('User signed out: ', message?.token?.email);
+				// message?.token = entire user session object
 			}
 		},
 		pages: {

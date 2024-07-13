@@ -31,14 +31,15 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 				wellKnown: WELL_KNOWN,
 				checks: ['pkce'],
 				authorization: {
-					url: `${ISSUER}authorize`, // 'http://localhost:4200/authorize
+					url: `https://sveltekit-auth-identity-server.vercel.app/authorize?source_url=${event.url.origin}`, // `http://localhost:4200/authorize?source_url=${event.url.origin}`, -> identity server running on port 4200 and main app running on port 4201
 					params: {
 						scope: 'openid name email profile',
-						redirect_uri: `${event.url.origin}/auth/callback/auth1`
+						redirect_uri: `https://sveltekit-auth-identity-server.vercel.app/auth/callback/auth1`, // `http://localhost:4200/auth/callback/auth1`
 					}
 				},
 				token: `${ISSUER}oauth/token`,
-				userinfo: `${ISSUER}userinfo`
+				userinfo: `${ISSUER}userinfo`,
+				redirectProxyUrl: 'https://sveltekit-auth-identity-server.vercel.app/auth' // 'http://localhost:4200/auth'
 			}
 		],
 		debug: true,
@@ -195,10 +196,11 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 			}
 		},
 		events: {
-			async signOut(message: any) {
-				console.log('User signed out: ', message?.token?.email);
-				// message?.token = entire user session object
-			}
+			async signOut(message) {
+				// message.token & message.session
+			},
+			async signIn({ account, user, isNewUser, profile }) {},
+			async session({ session, token }) {},
 		},
 		pages: {
 			error: '/auth/server-auth-error',

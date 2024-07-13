@@ -1,9 +1,8 @@
 import { dev } from '$app/environment';
-import Auth0Provider from "@auth/core/providers/auth0";
 import { SvelteKitAuth, type SvelteKitAuthConfig } from '@auth/sveltekit';
 import { VERCEL_SECRET, CLIENT_ID, CLIENT_SECRET, ISSUER, WELL_KNOWN } from '$env/static/private';
 
-import { difference, isEmpty } from 'lodash-es';
+import { isEmpty } from 'lodash-es';
 
 
 export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
@@ -11,13 +10,6 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 
 	const config: SvelteKitAuthConfig = {
 		providers: [
-			Auth0Provider({
-				id: 'auth0',
-				name: 'built-in-oauth-provider',
-				clientId: CLIENT_ID,
-				clientSecret: CLIENT_SECRET,
-				issuer: ISSUER
-			}),
 			{
 				id: 'auth1',
 				name: 'custom-oauth-provider',
@@ -56,7 +48,8 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					httpOnly: true,
 					sameSite: useSecureCookies ? 'none' : 'lax',
 					path: '/',
-					secure: useSecureCookies
+					secure: useSecureCookies,
+					// domain: '.myapp.com'
 				}
 			},
 			pkceCodeVerifier: {
@@ -65,7 +58,8 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					httpOnly: true,
 					sameSite: useSecureCookies ? 'none' : 'lax',
 					path: '/',
-					secure: useSecureCookies
+					secure: useSecureCookies,
+					// domain: '.myapp.com'
 				}
 			},
 			sessionToken: {
@@ -74,7 +68,8 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					httpOnly: true,
 					sameSite: useSecureCookies ? 'none' : 'lax',
 					path: '/',
-					secure: useSecureCookies
+					secure: useSecureCookies,
+					// domain: '.myapp.com'
 				}
 			},
 			state: {
@@ -83,89 +78,27 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					httpOnly: true,
 					sameSite: useSecureCookies ? 'none' : 'lax',
 					path: '/',
-					secure: useSecureCookies
+					secure: useSecureCookies,
+					// domain: '.myapp.com'
 				}
 			}
 		},
 		trustHost: true,
 		callbacks: {
 			async jwt({ token, account, profile }) {
-				/**
-				 * This callback triggers multiple times. For the very first time,
-				 * token -> { name, email, picture, sub }
-				 * account -> { all_tokens }
-				 * profile -> { all_user_details_and_custom-attributes }
-				 * trigger -> { signin, signut, update }
-				 * For second and successive times,
-				 * token -> { name, email, picture, sub, iat, exp, jti }
-				 * account -> undefined
-				 * profile -> undefined
-				 * trigger -> undefined
-				 */
-				// store init values that must be passed to session cb, if this line is skipped then
-				// { name, email, picture, sub, iat, exp, jti } will always be undefined in session cb
-				try {
-					if (!isEmpty(account)) {
-						token = { ...token, ...account };
-					}
-					if (!isEmpty(profile)) {
-						token = { ...token, ...(profile as any) };
-					}
-					
-					// update user data on request
-					const userQuery = event.request.headers.get('query') || event.url.searchParams.get('query');
-					
-					// refresh token post 30 minutes
-					if (
-						token &&
-						(isTokenRefreshRequired(token.token_expires_in as string) || userQuery === 'update-token-data')
-					) {
-						const tokenRequest = await event.fetch(
-							event.url.origin + '/api/renew-token',
-							{
-								method: 'POST'
-							}
-						);
-						const updatedToken = await tokenRequest.json();
-						if (updatedToken.access_token) {
-							token = {
-								...token,
-								...updatedToken
-							};
-						}
-					}
-
-					if (userQuery === 'update-user-data') {
-						try {
-							const clonedRequest = event.request.clone();
-							const clonedBody = clonedRequest.body;
-							const response = await new Response(clonedBody);
-							const body = await response.json();
-							if (!isEmpty(body)) {
-								token = {
-									...token,
-									...body
-								};
-							}
-						} catch (ex: any) {
-							console.log('Unable to update user data for url', ex?.message);
-						}
-					}
-				} catch (e: any) {
-					console.log('ERROR in AUTH JWT CALLBACK: ', e?.message);
+				if (!isEmpty(account)) {
+					token = { ...token, ...account };
+				}
+				if (!isEmpty(profile)) {
+					token = { ...token, ...(profile as any) };
 				}
 				return token;
 			},
 			async session({ session, token }) {
-				try {
-					// This callback triggers multiple times
-					if (session.user) {
-						if (token?.access_token) {
-							session.user = { ...session.user, ...token } as any;
-						}
+				if (session.user) {
+					if (token?.access_token) {
+						session.user = { ...session.user, ...token } as any;
 					}
-				} catch (e: any) {
-					console.log('ERROR in AUTH SESSION CALLBACK: ', e?.message);
 				}
 				return session;
 			}
@@ -180,45 +113,12 @@ export const { handle: getAuthConfig } = SvelteKitAuth(async (event) => {
 					errorMessage = e?.message;
 				}
 				console.log('ERROR in AUTH: ', errorMessage);
-
-				/**
-				 * Most recurring errors:
-				 * 1. ERROR in AUTH:  {"name":"CallbackRouteError","type":"CallbackRouteError","kind":"error"}
-				 * error { error: 'invalid_grant', error_description: 'invalid code verifier' }
-				 * This error occurs when the user cannot finish login.
-				 *
-				 * 2. ERROR in AUTH:  {"name":"InvalidCheck","type":"InvalidCheck","kind":"error"}
-				 * Thrown when a PKCE, state or nonce OAuth check could not be performed.
-				 * This could happen if the OAuth provider is configured incorrectly or if the browser is blocking cookies.
-				 *
-				 * Solution: Clear code-challenge and code-verifier cookies and try login again
-				 */
 			}
 		},
-		events: {
-			async signOut(message) {
-				// message.token & message.session
-			},
-			async signIn({ account, user, isNewUser, profile }) {},
-			async session({ session, token }) {},
-		},
 		pages: {
-			error: '/auth/server-auth-error',
-			signIn: '/auth/sign-in',
-			signOut: '/auth/sign-out'
+			error: '/auth/server-auth-error'
 		}
 	};
 
-	/* if (isPrUrl(event)) {
-		(config.providers[0] as any).checks = ['pkce', 'state'];
-		config.redirectProxyUrl = getEnvSpecificURL(
-			ENVIRONMENT.AUTH_REDIRECT_PROXY_URL
-		);
-	} */
-
 	return config;
 });
-
-function isTokenRefreshRequired(issued_at: string) {
-	return +difference([new Date(+issued_at), new Date(), 'minutes']) > 29;
-}

@@ -21,7 +21,7 @@
 		/*
 		const idToken = $page.data?.session?.user?.id_token as string;
 		window.location.href =
-			`${ISSUER}/oidc/logout?post_logout_redirect_uri=${encodeURIComponent(
+			`${ISSUER}oidc/logout?post_logout_redirect_uri=${encodeURIComponent(
 				window.location.origin
 			)}&id_token_hint=${idToken}`;
 		*/

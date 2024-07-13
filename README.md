@@ -1,9 +1,7 @@
-### SvelteKit Authentication using SvelteKitAuth and OAuth providers: A Comprehensive Guide
+### Managing Shared Sessions Across Multiple Applications in SvelteKitAuth
 
-There are multiple ways in which we can authenticate a user over the web, few of them are: matching user credentials in the database, delegating responsibility to an external OAuth provider etc. We can extend those similar concepts in SvelteKit too and implement authentication.
+Managing shared sessions across multiple applications in SvelteKitAuth involves configuring session sharing for apps on the same domain by updating the cookie's domain property. For different domains, a proxy identity server is used to handle redirection and centralize callback handling, ensuring cross-domain authentication. This setup allows secure and efficient session management across diverse application environments.
 
-SvelteKit does not provide out-of-box authentication. We can extend the means that we discussed above and implement authentication in SvelteKit. This guide will focus on implementing authentication in SvelteKit using SvelteKitAuth and OAuth providers. After reading this guide, you'll have a decent understanding of implementing authentication mechanisms in SvelteKit.
+**Blog Post**: https://blog.aakashgoplani.in/managing-shared-sessions-across-multiple-applications-in-sveltekitauth
 
-**Blog Post**: https://blog.aakashgoplani.in/series/sveltekitauth-sveltekit
-
-**Live Demo:** https://sveltekitauth-authjs.vercel.app/
+**Live Demo:** https://sveltekit-auth-preview.vercel.app/

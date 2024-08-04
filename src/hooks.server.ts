@@ -7,11 +7,12 @@ const userSessionInterceptor = (async ({ event, resolve }) => {
 	const isSessionTimedOut = new Date(session?.expires || '') <= new Date();
 	const isUserSessionUndefined = !session?.user;
 	const isUrlExempted =
+		event.url.pathname === '/' ||
+		event.url.pathname.includes('/api') ||
 		event.url.pathname.includes('/public/') ||
 		event.url.pathname.includes('/ssr-login') ||
 		event.url.pathname.includes('/ssr-logout') ||
-		event.url.pathname.includes('/api') ||
-		event.url.pathname === '/';
+		event.url.pathname.includes('/robots.txt');
 
 	if (isSessionTimedOut || isUserSessionUndefined) {
 		if (!isUrlExempted) {
